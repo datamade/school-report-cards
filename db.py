@@ -20,6 +20,7 @@ class School(Base):
     demographics = relationship('Demographic', backref=backref('school'), lazy='dynamic')
     characteristics = relationship('Characteristic', backref=backref('school'), lazy='dynamic')
     act_data = relationship('ACTDatum', backref=backref('school'), lazy='dynamic')
+    settings = relationship('InstructionalSetting', backref=backref('school'), lazy='dynamic')
 
     def __repr__(self):
         return '<School %r (%r)>' % (self.name, self.city)
@@ -34,6 +35,10 @@ class District(Base):
     size_name = Column(String(7))
     enrollment = Column(Integer)
     schools = relationship('School', backref=backref('district'), lazy='dynamic')
+    demographics = relationship('Demographic', backref=backref('district'), lazy='dynamic')
+    characteristics = relationship('Characteristic', backref=backref('district'), lazy='dynamic')
+    act_data = relationship('ACTDatum', backref=backref('district'), lazy='dynamic')
+    settings = relationship('InstructionalSetting', backref=backref('district'), lazy='dynamic')
 
     def __repr__(self):
         return '<District %r>' % (self.name)
@@ -45,6 +50,7 @@ class Demographic(Base):
     percentage = Column(Float)
     grouping = Column(String(10))
     school_id = Column(Integer, ForeignKey('school.id'), index=True)
+    district_id = Column(Integer, ForeignKey('district.id'), index=True)
 
     def __repr__(self):
         return '<Demographic %r (%r%%)>' % (self.name, self.percentage)
@@ -57,6 +63,7 @@ class Characteristic(Base):
     demographic = Column(String(27))
     grouping = Column(String(10))
     school_id = Column(Integer, ForeignKey('school.id'), index=True)
+    district_id = Column(Integer, ForeignKey('district.id'), index=True)
 
     def __repr__(self):
         return '<Characteristic %r (%r%%)>' % (self.name, self.percentage)
@@ -64,16 +71,27 @@ class Characteristic(Base):
 class ACTDatum(Base):
     __tablename__ = 'act_datum'
     id = Column(Integer, primary_key=True)
-    composite = Column(Float)
-    english = Column(Float)
-    math = Column(Float)
-    reading = Column(Float)
-    science = Column(Float)
+    area = Column(String(4))
+    score = Column(Float)
     grouping = Column(String(10))
     school_id = Column(Integer, ForeignKey('school.id'), index=True)
+    district_id = Column(Integer, ForeignKey('district.id'), index=True)
 
     def __repr__(self):
-        return '<ACTData %r (%r)>' % (self.school.name, self.school.city)
+        return '<ACTData %r (%r)>' % (self.area, self.grouping)
+
+class InstructionalSetting(Base):
+    __tablename__ = 'instructional_setting'
+    id = Column(Integer, primary_key=True)
+    grade = Column(String(5))
+    measure = Column(String(30))
+    grouping = Column(String(10))
+    count = Column(Float)
+    school_id = Column(Integer, ForeignKey('school.id'), index=True)
+    district_id = Column(Integer, ForeignKey('district.id'), index=True)
+
+    def __repr__(self):
+        return '<Instructional Setting %r (%r)>' % (self.grade, self.measure)
 
 def make_demos(values, grouping):
     demos = [
@@ -129,13 +147,17 @@ if __name__ == '__main__':
                 'district': district,
                 'enrollment': row[21].strip(),
             }
-            s = School(**school_data)
-            session.add(s)
-            session.commit()
+            s = session.query(School).get(school_data['id'])
+            if not s:
+                s = School(**school_data)
+                session.add(s)
+                session.commit()
             # School demographics
-            for grouping in ['school', 'district', 'subregion']:
-                for data in make_demos(row[13:20], grouping):
+            for grouping, indexes in {'school': (13,20), 'district': (30,36)}.items():
+                l_idx, r_idx = indexes
+                for data in make_demos(row[l_idx:r_idx], grouping):
                     if data:
+                        data['district'] = district
                         data['school'] = s
                         demo = session.query(Demographic).filter_by(**data).first()
                         if not demo:
@@ -148,7 +170,7 @@ if __name__ == '__main__':
             # School 'Characteristics'
             for idx, head in enumerate(headers[46:254]):
                 index = idx + 46
-                data = {'school': s}
+                data = {'school': s, 'district': district}
                 data['name'] = head[5].strip()
                 percentage = row[index].strip().replace(',','')
                 if not percentage:
@@ -169,13 +191,56 @@ if __name__ == '__main__':
                     session.add(char)
                     session.commit()
             # ACT data
-            for idx, head in enumerate(headers[256:279]):
-                index = idx + 256
-                if not row[index]:
+            for idx, head in enumerate(headers[257:279]):
+                index = idx + 254
+                if not row[index].strip():
                     continue
                 else:
-                    data = {'school': s}
-                    
+                    act_data = {'school': s, 'district': district}
+                    parts = head[5].strip().split(' ')
+                    if len(parts) == 3:
+                        area, grouping = parts[1:]
+                    elif len(parts) == 4:
+                        area, grouping = parts[1:3]
+                    else:
+                        area, grouping = head[5].split(' - ')
+                    act_data['score'] = row[index]
+                    act_data['grouping'] = grouping.lower()
+                    act_data['area'] = area.lower()
+                    act = session.query(ACTDatum).filter_by(**act_data)
+                    if not act:
+                        act = ACTDatum(**act_data)
+                        session.add(act)
+                        session.commit()
+            # Instructional setting
+            for idx, head in enumerate(headers[280:372]):
+                index = idx + 280
+                if row[index].strip():
+                    data = {'school': s, 'district': district}
+                    name = head[5]
+                    if name.find('(') > 0:
+                        data['grade'] = name[name.find('(')+1:name.find(')')]
+                        parts = name.split('-')
+                        if len(parts) == 2:
+                            data['measure'] = parts[0].strip()
+                            data['grouping'] = parts[1].split(' ')[0]
+                        else:
+                            parts = name.split('(')
+                            data['measure'] = parts[0].strip()
+                            data['grouping'] = parts[1][5:].lower()
+                    else:
+                        data['grade'] = 'all'
+                        parts = name.split(' - ')
+                        data['measure'] = parts[0]
+                        data['grouping'] = parts[1]
+                    data['count'] = row[index]
+                    inst = session.query(InstructionalSetting).filter_by(**data).first()
+                    if not inst:
+                        inst = InstructionalSetting(**data)
+                        session.add(inst)
+                        session.commit()
+                        print inst
+
 
 
 
