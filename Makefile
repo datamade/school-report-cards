@@ -1,11 +1,22 @@
-rc%u.zip :
-	wget http://www.isbe.net/research/zip/rc$*u.zip
+rc%.zip :
+	wget http://www.isbe.net/research/zip/rc$*.zip
 
-rc%u.txt : rc%u.zip
+RC%_layout.xls :
+	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/RC$*_layout.xls
+
+RC02_layout.xls :
+	wget -O $@ http://www.isbe.net/research/Report_Card_02/ReportCard02_layout.xls
+
+RC03_layout.xls :
+	wget http://www.isbe.net/research/xls/RC03_layout.xls
+
+rc%.txt : rc%.zip
 	unzip $<
 	touch $@
 
-rc%.csv : rc%u.txt schemas/reportcard20%.csv
-	in2csv -s $(word 2, $^) $< > $@
+schema_%.csv : RC%_layout.xls
+	xls2csv $< | tr -d '\014' | python schema.py > $@
 
+rc%.csv : rc%u.txt schema_%.csv
+	in2csv -s $(word 2, $^) $< > $@
 
