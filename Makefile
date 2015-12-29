@@ -7,13 +7,12 @@ define unzip-rename
 unzip -p $< > $@
 endef
 
-
 all : rc_97.csv rc_98.csv rc_99.csv rc_00.csv rc_01.csv rc_02.csv	\
       rc_03.csv rc_04.csv rc_05.csv rc_06.csv rc_07.csv rc_08.csv	\
       rc_09.csv rc_10.csv rc_11.csv rc_12.csv rc_13.csv rc_14.csv	\
       rc_15.csv
 
-.INTERMEDIATE: rc11.zip rc12.zip rc13.zip
+.INTERMEDIATE: rc11.zip rc12.zip rc13.zip rc14.zip 
 
 %.zip :
 	wget http://www.isbe.net/research/zip/$@
@@ -30,12 +29,12 @@ rc13.zip :
 rc14.zip :
 	wget http://www.isbe.net/assessment/zip/rc14.zip
 
-.INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98u.zip	\
+.INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98bu.zip	\
                RC99_layout.xls rc99lay.zip RC00_layout.xls	\
                Rc00lay.zip RC01_layout.xls RC01_layout.zip	\
                RC02_layout.xls RC03_layout.zip RC03_layout.xls	\
                RC06_layout.xls RC10_layout.xls RC11_layout.xls	\
-               RC12_layout.xls RC15_layout.xlss  
+               RC12_layout.xls RC15_layout.xlsx
 
 RC9%_layout.xls : rc9%.zip
 	$(unzip-rename)
@@ -68,7 +67,7 @@ RC10_layout.xls :
 	wget http://www.isbe.net/research/xls/RC10_layout.xls
 
 RC1%_layout.xlsx :
-	wget -O $@ http://www.isbe.net/assessment/xls/$@
+	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/201$*%20School%20Report%20Card/$@
 
 RC11_layout.xls :
 	wget http://www.isbe.net/assessment/xls/RC11_layout.xls
@@ -76,8 +75,6 @@ RC11_layout.xls :
 RC12_layout.xls :
 	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
 
-RC15_layout.xlsx :
-	wget ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/RC15_layout.xlsx
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC13_layout.xlsx	\
                RC14_layout.xlsx RC15_layout.csv
@@ -97,7 +94,7 @@ RC15_layout.csv : RC15_layout.xlsx
 schema_%.csv : RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
-.INTERMEDIATE : rc98u.txt rc98u.zip rc00u.txt Rc00u.zip rc02all.zip	\
+.INTERMEDIATE : rc98u.txt rc98u.zip rc00u.txt Rc00u.zip rc02All.zip	\
                 rc02u.txt rc04u.txt rc04u_updated092005.zip rc06u.txt	\
                 rc06.zip rc07u.txt rc07.zip rc09u.txt rc09.zip		\
                 rc10u.txt rc10.zip rc15u.txt
