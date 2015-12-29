@@ -1,33 +1,39 @@
 import csv
 import sys
 
-def whitelist(field) :
-    field = field.strip()
-    if field :
-        if field.replace('-', '').isdigit() :
-            return False
-        elif field == 'IMAGE' :
-            return False
-        else :
-            return True
-    else :
-        return False
+if len(sys.argv[1:]) == 5 :
+    (name_pos, start_pos, length_pos, 
+     first_note_pos, second_note_pos) = [int(pos) for pos in sys.argv[1:]]
+elif len(sys.argv[1:]) == 4 :
+    (name_pos, start_pos, length_pos, 
+     first_note_pos) = [int(pos) for pos in sys.argv[1:]]
+    second_note_pos = None
+else :
+    name_pos, start_pos, length_pos, first_note_pos, second_note_pos  = 5, 3, 4, 2, 1
+
+blacklist=("Blank", "semicolon filler")
 
 reader = csv.reader(sys.stdin)
 writer = csv.writer(sys.stdout)
 writer.writerow(('column', 'start', 'length'))
 
 for row in reader :
-    if not row[5].strip() :
+    try :
+        if not row[name_pos].strip() or row[name_pos].strip() in blacklist :
+            continue
+    except IndexError :
         continue
-    if whitelist(row[1]) :
-        col_name = '; '.join(name.strip() for name in (row[5], row[2], row[1]))
-    elif whitelist(row[2]) :
-        col_name = '; '.join(name.strip() for name in (row[5], row[2]))
+    if second_note_pos is not None and row[second_note_pos].strip() :
+        col_name = '; '.join(name.strip() for name in (row[name_pos], 
+                                                       row[first_note_pos], 
+                                                       row[second_note_pos]))
+    elif row[first_note_pos].strip() :
+        col_name = '; '.join(name.strip() for name in (row[name_pos], 
+                                                       row[first_note_pos]))
     else :
-        col_name = row[5].strip()
-    col_start = row[7]
-    col_length = int(row[4]) - 1
+        col_name = row[name_pos].strip()
+    col_start = int(row[start_pos].split('-')[0].strip())
+    col_length = int(row[length_pos]) - 1
     writer.writerow((col_name, col_start, col_length))
 
 
