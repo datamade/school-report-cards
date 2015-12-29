@@ -67,8 +67,8 @@ writer = csv.writer(sys.stdout, lineterminator='\n')
 writer.writerow(next(reader))
 
 for row in reader :
-    col_name = row[0]
+    col_name, col_start, col_length = row
     for cleaner in cleaners :
         col_name = cleaner(col_name)
-    writer.writerow([col_name])
+    writer.writerow([col_name, col_start, col_length])
 
