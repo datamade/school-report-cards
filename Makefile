@@ -34,7 +34,7 @@ rc14.zip :
                Rc00lay.zip RC01_layout.xls RC01_layout.zip	\
                RC02_layout.xls RC03_layout.zip RC03_layout.xls	\
                RC06_layout.xls RC10_layout.xls RC11_layout.xls	\
-               RC12_layout.xls RC15_layout.xlsx
+               RC12_layout.xls
 
 RC9%_layout.xls : rc9%.zip
 	$(unzip-rename)
@@ -77,7 +77,7 @@ RC12_layout.xls :
 
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC13_layout.xlsx	\
-               RC14_layout.xlsx RC15_layout.csv
+               RC14_layout.xlsx RC15_layout.csv RC15_layout.xlsx
 
 %.csv : %.xls 
 	unoconv --format csv $<
