@@ -1,16 +1,20 @@
+include config.mk
+
 97_col = 5 3 4 2
 98_col = 3 1 2 0
 99_col = 4 2 3 1
 00_col = 4 2 3 1
 
+years = 1997 1998 1999 2000 2001 2001 2003 2004 2005 2006 2007 2008	\
+        2009 2010 2011 2012 2013 2014 2015
+
+rcs = $(patsubst %,rc_%.csv,$(years))
+
 define unzip-rename
 unzip -p $< > $@
 endef
 
-all : rc_97.csv rc_98.csv rc_99.csv rc_00.csv rc_01.csv rc_02.csv	\
-      rc_03.csv rc_04.csv rc_05.csv rc_06.csv rc_07.csv rc_08.csv	\
-      rc_09.csv rc_10.csv rc_11.csv rc_12.csv rc_13.csv rc_14.csv	\
-      rc_15.csv
+all : $(rcs)
 
 .INTERMEDIATE: rc11.zip rc12.zip rc13.zip rc14.zip 
 
@@ -91,54 +95,97 @@ RC14_layout.csv : RC14_layout.xlsx
 RC15_layout.csv : RC15_layout.xlsx 
 	unoconv --format csv $<
 
-schema_%.csv : RC%_layout.csv
+schema_19%.csv : RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
-.INTERMEDIATE : rc98u.txt rc98u.zip rc00u.txt Rc00u.zip rc02All.zip	\
-                rc02u.txt rc04u.txt rc04u_updated092005.zip rc06u.txt	\
-                rc06.zip rc07u.txt rc07.zip rc09u.txt rc09.zip		\
-                rc10u.txt rc10.zip rc15u.txt
+schema_20%.csv : RC%_layout.csv
+	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
-rc9%u.txt : rc9%u.zip
+.INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip		\
+                rc02All.zip rc2002u.txt rc2004u.txt			\
+                rc04u_updated092005.zip rc2006u.txt rc06.zip		\
+                rc2007u.txt rc07.zip rc2009u.txt rc09.zip rc2010u.txt	\
+                rc10.zip rc2015u.txt
+
+rc199%u.txt : rc9%u.zip
 	$(unzip-rename)
 
-rc98u.txt : rc98bu.zip
+rc1998u.txt : rc98bu.zip
 	$(unzip-rename)
 
-rc0%u.txt : rc0%u.zip
+rc200%u.txt : rc0%u.zip
 	$(unzip-rename)
 
-rc00u.txt : Rc00u.zip
+rc2000u.txt : Rc00u.zip
 	$(unzip-rename)
 
 rc02All.zip :
 	wget http://www.isbe.net/research/Report_Card_02/rc02All.zip
 	touch $@
 
-rc02u.txt : rc02All.zip
+rc2002u.txt : rc02All.zip
 	$(unzip-rename)
 
-rc04u.txt : rc04u_updated092005.zip
+rc2004u.txt : rc04u_updated092005.zip
 	$(unzip-rename)
 
-rc06u.txt : rc06.zip
+rc2006u.txt : rc06.zip
 	$(unzip-rename)
 
-rc07u.txt : rc07.zip
+rc2007u.txt : rc07.zip
 	$(unzip-rename)
 
-rc09u.txt : rc09.zip
+rc2009u.txt : rc09.zip
 	$(unzip-rename)
 
-rc10u.txt : rc10.zip
+rc2010u.txt : rc10.zip
 	$(unzip-rename)
 
-rc1%u.txt : rc1%.zip
+rc201%u.txt : rc1%.zip
 	$(unzip-rename)
 
-rc15u.txt :
+rc2015u.txt :
 	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/rc15.txt
 
 rc_%.csv : rc%u.txt schema_%.csv
 	in2csv -s $(word 2, $^) $< > $@
 
+.PHONY : school.table
+raw_school.table : $(rcs)
+	-psql -d $(PG_DB) -c 'CREATE TABLE raw_school (rcdts TEXT, type TEXT, name TEXT, district TEXT, city TEXT, year INT)'
+	for year in $(years); \
+		do csvcut -c 1,2,3,4,5 rc_$$year.csv | sed "s/$$/,$$year/" | psql -d $(PG_DB) -c 'COPY raw_school FROM STDIN WITH CSV HEADER' ; \
+	done
+
+crosswalk.table : 
+	psql -d $(PG_DB) -c "CREATE TABLE crosswalk \
+                             AS \
+                             SELECT DISTINCT \
+                                    (substring(rcdts from 3 for 7) \
+                                     || substring(rcdts from '.{4}$$')) AS id, \
+                             rcdts \
+                             FROM raw_school"
+
+school.table :
+	psql -d $(PG_DB) -c "create table school as select distinct id as school_id, substring(rcdts from 3 for 7) as district_id, CASE WHEN substring(id from 8 for 1)='0' THEN 'High School' WHEN substring(id from 8 for 1)='1' THEN 'Middle/Junior High School' ELSE 'Elementary School' END as type, MIN(year) OVER (PARTITION BY id), MAX(year) OVER (PARTITION BY id) from crosswalk inner join raw_school using (rcdts)"
+
+district.table : 
+	psql -d $(PG_DB) -c "create table district as select distinct on(district_id) substring(rcdts from 3 for 7) as district_id, substring(rcdts from 3 for 3) as county, CASE WHEN length(rcdts)=15 THEN substring(rcdts from 10 for 2) ELSE NULL END as type, MIN(year) OVER (PARTITION BY substring(rcdts from 3 for 7)), MAX(year) OVER (PARTITION BY SUBSTRING(rcdts from 3 for 7)) from crosswalk inner join raw_school using (rcdts) order by district_id, type"
+
+act_columns = "ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE","ACT READ SCHOOL SCORE","ACT SCIE SCHOOL SCORE"
+
+act.table :
+	-psql -d $(PG_DB) -c 'CREATE TABLE raw_act (rcdts TEXT, act_composite FLOAT, act_english FLOAT, act_math FLOAT, act_reading FLOAT, act_science FLOAT, year INT)'
+	for year in $(years); \
+		do csvcut -c 1,$(act_columns) rc_$$year.csv | sed "s/$$/,$$year/" | psql -d $(PG_DB) -c 'COPY raw_act FROM STDIN WITH CSV HEADER' ; \
+	done
+
+
+
+
+# chicago 0162990 
+# invariants
+# - county
+# - district
+# (these don't change without the school id changing. effectively different school)
+# type code
