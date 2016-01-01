@@ -5,13 +5,26 @@ include config.mk
 99_col = 4 2 3 1
 00_col = 4 2 3 1
 
-years = 1997 1998 1999 2000 2001 2001 2003 2004 2005 2006 2007 2008	\
+years = 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008	\
         2009 2010 2011 2012 2013 2014 2015
 
 rcs = $(patsubst %,rc_%.csv,$(years))
 
+raw_school_defs = rcdts TEXT, type TEXT, name TEXT, district TEXT, \
+                  city TEXT, year INT
+raw_school_cols = 1,2,3,4,5
+
+raw_act_defs = rcdts TEXT, composite FLOAT, english FLOAT, \
+               math FLOAT, reading FLOAT, science FLOAT, year INT
+raw_act_cols = 1,"ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE","ACT READ SCHOOL SCORE","ACT SCIE SCHOOL SCORE"
+
 define unzip-rename
 unzip -p $< > $@
+endef
+
+define create_relation
+ psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
+ psql -d $(PG_DB) -c 
 endef
 
 all : $(rcs)
@@ -150,42 +163,63 @@ rc2015u.txt :
 rc_%.csv : rc%u.txt schema_%.csv
 	in2csv -s $(word 2, $^) $< > $@
 
-.PHONY : school.table
-raw_school.table : $(rcs)
-	-psql -d $(PG_DB) -c 'CREATE TABLE raw_school (rcdts TEXT, type TEXT, name TEXT, district TEXT, city TEXT, year INT)'
-	for year in $(years); \
-		do csvcut -c 1,2,3,4,5 rc_$$year.csv | sed "s/$$/,$$year/" | psql -d $(PG_DB) -c 'COPY raw_school FROM STDIN WITH CSV HEADER' ; \
-	done
-
-crosswalk.table : 
-	psql -d $(PG_DB) -c "CREATE TABLE crosswalk \
-                             AS \
-                             SELECT DISTINCT \
-                                    (substring(rcdts from 3 for 7) \
-                                     || substring(rcdts from '.{4}$$')) AS id, \
-                             rcdts \
-                             FROM raw_school"
-
-school.table :
-	psql -d $(PG_DB) -c "create table school as select distinct id as school_id, substring(rcdts from 3 for 7) as district_id, CASE WHEN substring(id from 8 for 1)='0' THEN 'High School' WHEN substring(id from 8 for 1)='1' THEN 'Middle/Junior High School' ELSE 'Elementary School' END as type, MIN(year) OVER (PARTITION BY id), MAX(year) OVER (PARTITION BY id) from crosswalk inner join raw_school using (rcdts)"
-
-district.table : 
-	psql -d $(PG_DB) -c "create table district as select distinct on(district_id) substring(rcdts from 3 for 7) as district_id, substring(rcdts from 3 for 3) as county, CASE WHEN length(rcdts)=15 THEN substring(rcdts from 10 for 2) ELSE NULL END as type, MIN(year) OVER (PARTITION BY substring(rcdts from 3 for 7)), MAX(year) OVER (PARTITION BY SUBSTRING(rcdts from 3 for 7)) from crosswalk inner join raw_school using (rcdts) order by district_id, type"
-
-act_columns = "ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE","ACT READ SCHOOL SCORE","ACT SCIE SCHOOL SCORE"
-
-act.table :
-	-psql -d $(PG_DB) -c 'CREATE TABLE raw_act (rcdts TEXT, act_composite FLOAT, act_english FLOAT, act_math FLOAT, act_reading FLOAT, act_science FLOAT, year INT)'
-	for year in $(years); \
-		do csvcut -c 1,$(act_columns) rc_$$year.csv | sed "s/$$/,$$year/" | psql -d $(PG_DB) -c 'COPY raw_act FROM STDIN WITH CSV HEADER' ; \
-	done
+raw_% :
+	psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
+	(psql -d $(PG_DB) -c 'CREATE TABLE $@ ($($@_defs))' && \
+	 for year in $(years); \
+	    do csvcut -c $($@_cols) rc_$$year.csv | \
+               sed "s/$$/,$$year/" | \
+               psql -d $(PG_DB) -c 'COPY $@ FROM STDIN WITH CSV HEADER' ; \
+	 done)
 
 
+crosswalk : raw_school
+	$(create_relation) "CREATE TABLE crosswalk \
+                            AS \
+                            SELECT DISTINCT \
+                                   (SUBSTRING(rcdts FROM 3 FOR 7) \
+                                    || SUBSTRING(rcdts FROM '.{4}$$')) AS school_id, \
+                            rcdts \
+                            FROM raw_school"
+
+school : crosswalk 
+	$(create_relation) "CREATE TABLE school \
+                            AS SELECT DISTINCT \
+                                      school_id, \
+                                      SUBSTRING(school_id FROM 1 FOR 7) AS district_id, \
+                                      CASE WHEN SUBSTRING(school_id FROM 8 FOR 1)='0' \
+                                           THEN 'High School' \
+                                           WHEN SUBSTRING(school_id FROM 8 fOR 1)='1' \
+                                           THEN 'Middle/Junior High School' \
+                                           ELSE 'Elementary School' \
+                                      END as type, \
+                                      MIN(year) OVER (PARTITION BY school_id), \
+                                      MAX(year) OVER (PARTITION BY school_id) \
+                               FROM crosswalk INNER JOIN raw_school \
+                               USING (rcdts)"
+
+district : crosswalk
+	$(create_relation) "CREATE TABLE district \
+                            AS SELECT DISTINCT ON(district_id) \
+                                      SUBSTRING(rcdts FROM 3 FOR 7) AS district_id, \
+                                      SUBSTRING(rcdts FROM 3 FOR 3) AS county, \
+                                      CASE WHEN LENGTH(rcdts)=15 \
+                                           THEN SUBSTRING(rcdts FROM 10 FOR 2) \
+                                           ELSE NULL \
+                                      END AS type, \
+                                      MIN(year) OVER (PARTITION BY SUBSTRING(rcdts FROM 3 FOR 7)), \
+                                      MAX(year) OVER (PARTITION BY SUBSTRING(rcdts from 3 for 7)) \
+                               FROM crosswalk INNER JOIN raw_school \
+                               USING (rcdts) \
+                               ORDER BY district_id, type"
 
 
-# chicago 0162990 
-# invariants
-# - county
-# - district
-# (these don't change without the school id changing. effectively different school)
-# type code
+act : raw_act crosswalk
+	$(create_relation) "CREATE TABLE act \
+                            AS SELECT school_id, composite, english, \
+                                      math, reading, science, year \
+                            FROM raw_act INNER JOIN crosswalk \
+                            USING (rcdts) \
+                            WHERE composite IS NOT NULL"
+
+all : act school district
