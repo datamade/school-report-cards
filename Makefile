@@ -10,13 +10,20 @@ years = 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008	\
 
 rcs = $(patsubst %,rc_%.csv,$(years))
 
-raw_school_defs = rcdts TEXT, type TEXT, name TEXT, district TEXT, \
-                  city TEXT, year INT
+raw_school_defs = type TEXT, name TEXT, district TEXT, city TEXT
 raw_school_cols = 1,2,3,4,5
 
-raw_act_defs = rcdts TEXT, composite FLOAT, english FLOAT, \
-               math FLOAT, reading FLOAT, science FLOAT, year INT
-raw_act_cols = 1,"ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE","ACT READ SCHOOL SCORE","ACT SCIE SCHOOL SCORE"
+raw_act_defs = composite FLOAT, english FLOAT, math FLOAT, reading FLOAT, \
+               science FLOAT
+raw_act_cols = "ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE","ACT READ SCHOOL SCORE","ACT SCIE SCHOOL SCORE"
+
+raw_demography_defs = white_percent FLOAT, black_percent FLOAT, \
+                      hispanic_percent FLOAT, asian_percent FLOAT, \
+                      native_american_percent FLOAT, total TEXT, \
+                      limited_english_proficiency_percent FLOAT, \
+                      low_income_percent FLOAT 
+
+raw_demography_cols = "SCHOOL - WHITE %","SCHOOL - BLACK %","SCHOOL - HISPANIC %","SCHOOL - ASIAN %","SCHOOL - NATIVE AMERICAN %","SCHOOL TOTAL ENROLLMENT","L.E.P. SCHOOL %","LOW - INCOME SCHOOL %"
 
 define unzip-rename
 unzip -p $< > $@
@@ -165,13 +172,12 @@ rc_%.csv : rc%u.txt schema_%.csv
 
 raw_% :
 	psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
-	(psql -d $(PG_DB) -c 'CREATE TABLE $@ ($($@_defs))' && \
+	(psql -d $(PG_DB) -c 'CREATE TABLE $@ (rcdts TEXT, $($@_defs), year INT)' && \
 	 for year in $(years); \
-	    do csvcut -c $($@_cols) rc_$$year.csv | \
+	    do csvcut -c 1,$($@_cols) rc_$$year.csv | \
                sed "s/$$/,$$year/" | \
                psql -d $(PG_DB) -c 'COPY $@ FROM STDIN WITH CSV HEADER' ; \
 	 done)
-
 
 crosswalk : raw_school
 	$(create_relation) "CREATE TABLE crosswalk \
@@ -213,13 +219,27 @@ district : crosswalk
                                USING (rcdts) \
                                ORDER BY district_id, type"
 
-
-act : raw_act crosswalk
-	$(create_relation) "CREATE TABLE act \
+act : raw_act
+	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT school_id, composite, english, \
                                       math, reading, science, year \
-                            FROM raw_act INNER JOIN crosswalk \
+                            FROM raw_$@ INNER JOIN crosswalk \
                             USING (rcdts) \
                             WHERE composite IS NOT NULL"
 
-all : act school district
+demography : raw_demography
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT school_id, \
+                                      white_percent/100 as white_percent, \
+                                      black_percent/100 as black_percent, \
+                                      hispanic_percent/100 as hispanic_percent, \
+                                      asian_percent/100 as asian_percent, \
+                                      native_american_percent/100 as native_american_percent, \
+                                      replace(total, ',', '')::integer AS total, \
+                                      limited_english_proficiency_percent/100 as limited_english_proficiency, \
+                                      low_income_percent/100 as low_income_percent, \
+                                      year \
+                            FROM raw_$@ INNER JOIN crosswalk \
+                            USING (rcdts)"
+
+all : act school district demography
