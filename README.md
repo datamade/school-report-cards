@@ -15,7 +15,9 @@ appears in all 22 years of data. These include
 * ACT Scores
 * Demography and enrollment
 * Time spent on subject
-* Class sizes
+* Class sizes, by grade
+* School level characteristics like parent involvement, truancy, and graduation rate.
+
 
 ## Requirements
 * [GNU Make](https://www.gnu.org/software/make/)
