@@ -202,7 +202,7 @@ rc2015u.txt :
 rc_%.csv : rc%u.txt schema_%.csv
 	in2csv -s $(word 2, $^) $< > $@
 
-raw_% :
+raw_% : $(rcs)
 	psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
 	(psql -d $(PG_DB) -c 'CREATE TABLE $@ (rcdts TEXT, $($@_defs), year INT)' && \
 	 for year in $(years); \
@@ -211,8 +211,8 @@ raw_% :
                psql -d $(PG_DB) -c 'COPY $@ FROM STDIN WITH CSV HEADER' ; \
 	 done)
 
-crosswalk : raw_school
-	$(create_relation) "CREATE TABLE crosswalk \
+rcdts_crosswalk : raw_school
+	$(create_relation) "CREATE TABLE rcdts_crosswalk \
                             AS \
                             SELECT DISTINCT \
                                    (SUBSTRING(rcdts FROM 3 FOR 7) \
@@ -220,7 +220,7 @@ crosswalk : raw_school
                             rcdts \
                             FROM raw_school"
 
-school : crosswalk raw_school
+school : rcdts_crosswalk raw_school
 	$(create_relation) "CREATE TABLE school \
                             AS SELECT DISTINCT \
                                       school_id, \
@@ -241,7 +241,7 @@ school : crosswalk raw_school
                                USING (rcdts)"
 
 
-district : crosswalk raw_school
+district : rcdts_crosswalk raw_school
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT ON(district_id) \
                                       SUBSTRING(rcdts FROM 3 FOR 7) AS district_id, \
@@ -260,7 +260,7 @@ district : crosswalk raw_school
                                USING (rcdts) \
                                ORDER BY district_id, type"
 
-act : raw_act crosswalk
+act : raw_act rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT school_id, composite, english, \
                                       math, reading, science, year \
@@ -268,7 +268,7 @@ act : raw_act crosswalk
                             USING (rcdts) \
                             WHERE composite IS NOT NULL"
 
-demography : raw_demography crosswalk
+demography : raw_demography rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT \
                                       school_id, \
@@ -284,7 +284,7 @@ demography : raw_demography crosswalk
                             FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts)"
 
-characteristics : raw_characteristics crosswalk
+characteristics : raw_characteristics rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                              AS SELECT DISTINCT \
                                        school_id, \
@@ -298,7 +298,7 @@ characteristics : raw_characteristics crosswalk
                              USING (rcdts)"
 
 
-average_class_size : raw_instructional crosswalk
+average_class_size : raw_instructional rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT * FROM \
                             (SELECT school_id, \
@@ -319,7 +319,7 @@ average_class_size : raw_instructional crosswalk
                              USING (rcdts)) AS t \
                             WHERE average_class_size IS NOT NULL"
 
-minutes_per_subject : raw_instructional crosswalk
+minutes_per_subject : raw_instructional rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT * FROM \
                             (SELECT school_id, \
@@ -346,7 +346,7 @@ minutes_per_subject : raw_instructional crosswalk
                                   OR science IS NOT NULL \
                                   OR social_science IS NOT NULL"
 
-grades : raw_grades crosswalk
+grades : raw_grades rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT \
                                    school_id, \
