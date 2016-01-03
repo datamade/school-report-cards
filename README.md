@@ -23,7 +23,6 @@ appears in all 22 years of data. These include
 * [Python](https://www.python.org/downloads/)
 * [unoconv](http://dag.wiee.rs/home-made/unoconv/)
 * [csvkit](https://csvkit.readthedocs.org/en/0.9.1/install.html)
-* [SQLAlchemy](http://www.sqlalchemy.org/)
 * [PostgreSQL](http://www.postgresql.org/)
 * [unzip](http://www.info-zip.org/)
 
