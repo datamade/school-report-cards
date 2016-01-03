@@ -1,5 +1,7 @@
 include config.mk
 
+HASH = \#
+
 97_col = 5 3 4 2
 98_col = 3 1 2 0
 99_col = 4 2 3 1
@@ -11,7 +13,7 @@ years = 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008	\
 rcs = $(patsubst %,rc_%.csv,$(years))
 
 raw_school_defs = type TEXT, name TEXT, district TEXT, city TEXT
-raw_school_cols = 1,2,3,4,5
+raw_school_cols = 2,3,4,5
 
 raw_act_defs = composite FLOAT, english FLOAT, math FLOAT, reading FLOAT, \
                science FLOAT
@@ -24,6 +26,36 @@ raw_demography_defs = white_percent FLOAT, black_percent FLOAT, \
                       low_income_percent FLOAT 
 
 raw_demography_cols = "SCHOOL - WHITE %","SCHOOL - BLACK %","SCHOOL - HISPANIC %","SCHOOL - ASIAN %","SCHOOL - NATIVE AMERICAN %","SCHOOL TOTAL ENROLLMENT","L.E.P. SCHOOL %","LOW - INCOME SCHOOL %"
+
+raw_characteristics_defs = parental_involvement_percent FLOAT, \
+                           mobility_rate FLOAT, \
+                           dropout_rate FLOAT, \
+                           chronic_truants TEXT, \
+                           chronic_truants_rate FLOAT
+raw_characteristics_cols =  "PARENTAL INVOLVEMENT SCHOOL %","MOBILITY RATE SCHOOL %","DROPOUT RATE SCHOOL %","CHRONIC TRUANTS $(HASH) - SCHOOL","CHRONIC TRUANTS RATE SCHOOL %"
+
+raw_instructional_defs = average_class_size_kg FLOAT, \
+                         average_class_size_g1 FLOAT, \
+                         average_class_size_g3 FLOAT, \
+                         average_class_size_g6 FLOAT, \
+                         average_class_size_g8 FLOAT, \
+                         average_class_size_hs FLOAT, \
+                         minutes_per_day_math_g3 INT, \
+                         minutes_per_day_math_g6 INT, \
+                         minutes_per_day_math_g8 INT, \
+                         minutes_per_day_science_g3 INT, \
+                         minutes_per_day_science_g6 INT, \
+                         minutes_per_day_science_g8 INT, \
+                         minutes_per_day_english_g3 INT, \
+                         minutes_per_day_english_g6 INT, \
+                         minutes_per_day_english_g8 INT, \
+                         minutes_per_day_social_science_g3 INT, \
+                         minutes_per_day_social_science_g6 INT, \
+                         minutes_per_day_social_science_g8 INT
+raw_instructional_cols = "AVG CLASS SIZE - SCHOOL (KG)","AVG CLASS SIZE - SCHOOL (GR1)","AVG CLASS SIZE - SCHOOL (GR3)","AVG CLASS SIZE - SCHOOL (GR6)","AVG CLASS SIZE - SCHOOL (GR8)","AVG CLASS SIZE - SCHOOL (H.S.)","MIN PER DAY MATH (GR3) SCHOOL","MIN PER DAY MATH (GR6) SCHOOL","MIN PER DAY MATH (GR8) SCHOOL","MIN PER DAY SCIE (GR3) SCHOOL","MIN PER DAY SCIE (GR6) SCHOOL","MIN PER DAY SCIE (GR8) SCHOOL","MIN PER DAY ENGL (GR3) SCHOOL","MIN PER DAY ENGL (GR6) SCHOOL","MIN PER DAY ENGL (GR8) SCHOOL","MIN PER DAY SOSC (GR3) SCHOOL","MIN PER DAY SOSC (GR6) SCHOOL","MIN PER DAY SOSC (GR8) SCHOOL"
+
+raw_grades_defs = grades TEXT
+raw_grades_cols = "GRADES IN SCHOOL"
 
 define unzip-rename
 unzip -p $< > $@
@@ -188,10 +220,14 @@ crosswalk : raw_school
                             rcdts \
                             FROM raw_school"
 
-school : crosswalk 
+school : crosswalk raw_school
 	$(create_relation) "CREATE TABLE school \
                             AS SELECT DISTINCT \
                                       school_id, \
+                                      LAST_VALUE(name) \
+                                          OVER (partition BY school_id \
+                                                ORDER BY year \
+                                                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as name, \
                                       SUBSTRING(school_id FROM 1 FOR 7) AS district_id, \
                                       CASE WHEN SUBSTRING(school_id FROM 8 FOR 1)='0' \
                                            THEN 'High School' \
@@ -201,13 +237,18 @@ school : crosswalk
                                       END as type, \
                                       MIN(year) OVER (PARTITION BY school_id), \
                                       MAX(year) OVER (PARTITION BY school_id) \
-                               FROM crosswalk INNER JOIN raw_school \
+                               FROM $< INNER JOIN $(word 2,$^) \
                                USING (rcdts)"
 
-district : crosswalk
-	$(create_relation) "CREATE TABLE district \
+
+district : crosswalk raw_school
+	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT DISTINCT ON(district_id) \
                                       SUBSTRING(rcdts FROM 3 FOR 7) AS district_id, \
+                                      LAST_VALUE(district) \
+                                          OVER (partition BY SUBSTRING(rcdts FROM 3 FOR 7) \
+                                                ORDER BY year \
+                                                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as name, \
                                       SUBSTRING(rcdts FROM 3 FOR 3) AS county, \
                                       CASE WHEN LENGTH(rcdts)=15 \
                                            THEN SUBSTRING(rcdts FROM 10 FOR 2) \
@@ -215,21 +256,22 @@ district : crosswalk
                                       END AS type, \
                                       MIN(year) OVER (PARTITION BY SUBSTRING(rcdts FROM 3 FOR 7)), \
                                       MAX(year) OVER (PARTITION BY SUBSTRING(rcdts from 3 for 7)) \
-                               FROM crosswalk INNER JOIN raw_school \
+                               FROM $< INNER JOIN $(word 2,$^) \
                                USING (rcdts) \
                                ORDER BY district_id, type"
 
-act : raw_act
+act : raw_act crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                             AS SELECT school_id, composite, english, \
                                       math, reading, science, year \
-                            FROM raw_$@ INNER JOIN crosswalk \
+                            FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts) \
                             WHERE composite IS NOT NULL"
 
-demography : raw_demography
+demography : raw_demography crosswalk
 	$(create_relation) "CREATE TABLE $@ \
-                            AS SELECT school_id, \
+                            AS SELECT DISTINCT \
+                                      school_id, \
                                       white_percent/100 as white_percent, \
                                       black_percent/100 as black_percent, \
                                       hispanic_percent/100 as hispanic_percent, \
@@ -239,7 +281,79 @@ demography : raw_demography
                                       limited_english_proficiency_percent/100 as limited_english_proficiency, \
                                       low_income_percent/100 as low_income_percent, \
                                       year \
-                            FROM raw_$@ INNER JOIN crosswalk \
+                            FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts)"
 
-all : act school district demography
+characteristics : raw_characteristics crosswalk
+	$(create_relation) "CREATE TABLE $@ \
+                             AS SELECT DISTINCT \
+                                       school_id, \
+                                       parental_involvement_percent/100 AS parental_involvment_percent, \
+                                       mobility_rate/100 AS mobility_rate, \
+                                       dropout_rate/100 AS dropout_rate, \
+                                       replace(chronic_truants, ',','')::numeric, \
+	                               chronic_truants_rate/100 as chronic_truants_rate, \
+                                       year \
+                             FROM $< INNER JOIN $(word 2,$^) \
+                             USING (rcdts)"
+
+
+average_class_size : raw_instructional crosswalk
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT DISTINCT * FROM \
+                            (SELECT school_id, \
+                                    UNNEST(ARRAY['kindergarten', \
+                                                 'first', \
+                                                 'third', \
+                                                 'sixth', \
+                                                 'eighth', \
+                                                 'high school']) AS grade, \
+                                    UNNEST(ARRAY[average_class_size_kg, \
+                                                 average_class_size_g1, \
+                                                 average_class_size_g3, \
+                                                 average_class_size_g6, \
+                                                 average_class_size_g8, \
+                                                 average_class_size_hs]) AS average_class_size, \
+                                    year \
+                             FROM $< INNER JOIN $(word 2,$^) \
+                             USING (rcdts)) AS t \
+                            WHERE average_class_size IS NOT NULL"
+
+minutes_per_subject : raw_instructional crosswalk
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT DISTINCT * FROM \
+                            (SELECT school_id, \
+                             UNNEST(ARRAY['third', \
+                                          'sixth', \
+                                          'eighth']), \
+                             UNNEST(ARRAY[minutes_per_day_math_g3, \
+                                          minutes_per_day_math_g6, \
+                                          minutes_per_day_math_g8]) AS math, \
+                             UNNEST(ARRAY[minutes_per_day_english_g3, \
+                                          minutes_per_day_english_g6, \
+                                          minutes_per_day_english_g8]) AS english, \
+                             UNNEST(ARRAY[minutes_per_day_science_g3, \
+                                          minutes_per_day_science_g6, \
+                                          minutes_per_day_science_g8]) AS science, \
+                             UNNEST(ARRAY[minutes_per_day_social_science_g3, \
+                                          minutes_per_day_social_science_g6, \
+                                          minutes_per_day_social_science_g8]) AS social_science, \
+                             year \
+                             FROM $< INNER JOIN $(word 2,$^) \
+                             USING (rcdts)) as t \
+                            WHERE math IS NOT NULL \
+                                  OR english IS NOT NULL \
+                                  OR science IS NOT NULL \
+                                  OR social_science IS NOT NULL"
+
+grades : raw_grades crosswalk
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT DISTINCT \
+                                   school_id, \
+                                   STRING_TO_ARRAY(grades, ' ') AS grades, \
+                                   year \
+                            FROM $< INNER JOIN $(word 2,$^) \
+                            USING (rcdts)"
+
+all : act school district demography characteristics average_class_size \
+      minutes_per_subject grades

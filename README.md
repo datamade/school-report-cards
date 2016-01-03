@@ -9,8 +9,13 @@ If you run `make` the program will
 2. Convert the fixed with files to csv format, with normalized column names
 3. Import the data into normalized tables in a postgresql database
 
-1 and 2 are finished. I'll start with 3 with data that is present
-across the entire time period.
+Right now, these scripts only fully process the school-level data that
+appears in all 22 years of data. These include
+
+* ACT Scores
+* Demography and enrollment
+* Time spent on subject
+* Class sizes
 
 ## Requirements
 * [GNU Make](https://www.gnu.org/software/make/)
