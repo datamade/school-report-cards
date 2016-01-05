@@ -66,6 +66,11 @@ define create_relation
  psql -d $(PG_DB) -c 
 endef
 
+define create_relation_and
+ psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
+ (psql -d $(PG_DB) -c 
+endef
+
 all : $(rcs)
 
 .INTERMEDIATE: rc11.zip rc12.zip rc13.zip rc14.zip 
@@ -354,6 +359,24 @@ grades : raw_grades rcdts_crosswalk
                                    year \
                             FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts)"
+
+.INTERMEDIATE : CPS_Schools_2013-2014_Academic_Year.csv
+CPS_Schools_2013-2014_Academic_Year.csv :
+	wget -O $@ https://data.cityofchicago.org/api/views/c7jj-qjvh/rows.csv?accessType=DOWNLOAD
+
+raw_cps_crosswalk : CPS_Schools_2013-2014_Academic_Year.csv
+	$(create_relation_and) "CREATE TABLE $@ \
+                               (cps_id TEXT, cps_unit TEXT, rcdts TEXT, \
+                                oracle_id TEXT)" \
+        && csvcut -c "SchoolID","CPS Unit","ISBE ID","OracleID" $< | \
+           psql -d $(PG_DB) -c 'COPY $@ FROM STDIN WITH CSV HEADER')
+
+cps_crosswalk : raw_cps_crosswalk rcdts_crosswalk
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT school_id, cps_id, cps_unit, oracle_id \
+                            FROM $< INNER JOIN $(word 2,$^) \
+                            using(rcdts)"
+
 
 all : act school district demography characteristics average_class_size \
       minutes_per_subject grades
