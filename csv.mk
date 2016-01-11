@@ -10,7 +10,8 @@ endef
 %.zip :
 	wget http://www.isbe.net/research/zip/$@
 
-rc1%.zip  :
+.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip
+rc11.zip rc12.zip rc13.zip rc14.zip :
 	wget http://www.isbe.net/assessment/zip/$@
 
 .INTERMEDIATE : rc02All.zip
@@ -60,7 +61,8 @@ RC12_layout.xls :
 %.csv : %.xls 
 	unoconv --format csv $<
 
-.INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv
+.INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
+               RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
 RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx 
 	unoconv --format csv $<
 
@@ -70,7 +72,7 @@ schema_19%.csv schema_20%.csv: RC%_layout.csv
 .INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip		\
                 rc2002u.txt rc2004u.txt rc04u_updated092005.zip		\
                 rc2006u.txt rc06.zip rc2007u.txt rc07.zip rc2009u.txt	\
-                rc09.zip rc2010u.txt rc10.zip rc2015u.txt
+                rc09.zip rc2015u.txt
 
 rc19%u.txt rc20%u.txt : rc%u.zip
 	$(unzip-rename)
@@ -87,7 +89,10 @@ rc2002u.txt : rc02All.zip
 rc2004u.txt : rc04u_updated092005.zip
 	$(unzip-rename)
 
-rc2006u.txt rc2007u.txt rc2009u.txt rc2010u.txt : rc20%u.txt : rc%.zip
+rc2006u.txt rc2007u.txt rc2009u.txt : rc20%u.txt : rc%.zip
+	$(unzip-rename)
+
+rc201%u.txt : rc1%.zip
 	$(unzip-rename)
 
 rc2015u.txt :
