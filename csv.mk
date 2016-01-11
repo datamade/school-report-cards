@@ -13,6 +13,7 @@ endef
 rc1%.zip  :
 	wget http://www.isbe.net/assessment/zip/$@
 
+.INTERMEDIATE : rc02All.zip
 rc02All.zip :
 	wget http://www.isbe.net/research/Report_Card_02/$@
 
@@ -48,10 +49,10 @@ RC%_layout.xls RC%_layout.xlsx :
 	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/$@
 
 RC06_layout.xls :
-	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/RC06_layout.xls"
+	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/$@"
 
 RC11_layout.xls :
-	wget http://www.isbe.net/assessment/xls/RC11_layout.xls
+	wget http://www.isbe.net/assessment/xls/$@
 
 RC12_layout.xls :
 	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
@@ -67,10 +68,9 @@ schema_19%.csv schema_20%.csv: RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
 .INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip		\
-                rc02All.zip rc2002u.txt rc2004u.txt			\
-                rc04u_updated092005.zip rc2006u.txt rc06.zip		\
-                rc2007u.txt rc07.zip rc2009u.txt rc09.zip rc2010u.txt	\
-                rc10.zip rc2015u.txt
+                rc2002u.txt rc2004u.txt rc04u_updated092005.zip		\
+                rc2006u.txt rc06.zip rc2007u.txt rc07.zip rc2009u.txt	\
+                rc09.zip rc2010u.txt rc10.zip rc2015u.txt
 
 rc19%u.txt rc20%u.txt : rc%u.zip
 	$(unzip-rename)
