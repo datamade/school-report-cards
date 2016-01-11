@@ -6,7 +6,7 @@ Tools for parsing annual school report card data from the state of Illinois
 If you run `make csv` the program will
 
 1. Download ISBE report card data from 1997-2015
-2. Convert the fixed with files to csv format, with normalized column names
+2. Convert the fixed width files to csv format, with year-over-year normalized column names
 
 If you run `make database` the program will import the data into
 normalized tables in a postgresql database
