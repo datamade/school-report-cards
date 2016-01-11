@@ -7,22 +7,12 @@ define unzip-rename
 unzip -p $< > $@
 endef
 
-.INTERMEDIATE: rc11.zip rc12.zip rc13.zip rc14.zip 
-
 %.zip :
 	wget http://www.isbe.net/research/zip/$@
 
-rc11.zip :
-	wget http://www.isbe.net/assessment/zip/rc11.zip
-
-rc12.zip :
-	wget http://www.isbe.net/assessment/zip/rc12.zip
-
-rc13.zip :
-	wget http://www.isbe.net/assessment/zip/rc13.zip
-
-rc14.zip :
-	wget http://www.isbe.net/assessment/zip/rc14.zip
+.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip
+rc11.zip rc12.zip rc13.zip rc14.zip :
+	wget http://www.isbe.net/assessment/zip/$@
 
 .INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98bu.zip	\
                RC99_layout.xls rc99lay.zip RC00_layout.xls	\
