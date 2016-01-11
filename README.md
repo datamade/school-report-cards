@@ -1,4 +1,4 @@
-school-report-cards
+School Report Cards
 ===================
 
 Tools for parsing annual school report card data from the state of Illinois
