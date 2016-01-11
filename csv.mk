@@ -65,6 +65,7 @@ RC11_layout.xls :
 RC12_layout.xls :
 	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
 
+
 %.csv : %.xls 
 	unoconv --format csv $<
 
@@ -78,10 +79,11 @@ schema_19%.csv : RC%_layout.csv
 schema_20%.csv : RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
-.INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip	\
-                rc02All.zip rc2002u.txt rc2004u.txt		\
-                rc04u_updated092005.zip rc2006u.txt rc2007u.txt	\
-                rc2009u.txt rc2010u.txt rc2015u.txt
+.INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip		\
+                rc02All.zip rc2002u.txt rc2004u.txt			\
+                rc04u_updated092005.zip rc2006u.txt rc06.zip		\
+                rc2007u.txt rc07.zip rc2009u.txt rc09.zip rc2010u.txt	\
+                rc10.zip rc2015u.txt
 
 rc199%u.txt : rc9%u.zip
 	$(unzip-rename)
@@ -101,7 +103,7 @@ rc2002u.txt : rc02All.zip
 rc2004u.txt : rc04u_updated092005.zip
 	$(unzip-rename)
 
-rc2006u.txt rc2007u.txt rc2009u.txt rc2010u.txt : rc20%.txt : rc%.zip
+rc2006u.txt rc2007u.txt rc2009u.txt rc2010u.txt : rc20%u.txt : rc%.zip
 	$(unzip-rename)
 
 rc2015u.txt :
