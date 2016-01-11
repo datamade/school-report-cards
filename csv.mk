@@ -10,8 +10,7 @@ endef
 %.zip :
 	wget http://www.isbe.net/research/zip/$@
 
-.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip
-rc11.zip rc12.zip rc13.zip rc14.zip :
+rc1%.zip  :
 	wget http://www.isbe.net/assessment/zip/$@
 
 rc02All.zip :
