@@ -1,5 +1,3 @@
-all :
-
 .PHONY : cps_school_data
 cps_school_data :
 	wget -P cps_data/ -e robots=off -r -l 1 -nd -N -A xls,xlsx -H http://cps.edu/SchoolData/Pages/SchoolData.aspx
@@ -13,10 +11,8 @@ unpadded_enrollment = $(patsubst %,unpadded_%,$(enrollment))
 .INTERMEDIATE : $(unpadded_enrollment)
 .INTERMEDIATE : $(enrollment)
 
-unpadded_enrollment_1999.csv unpadded_enrollment_2000.csv		\
-unpadded_enrollment_2001.csv unpadded_enrollment_2002.csv		\
-unpadded_enrollment_2003.csv unpadded_enrollment_2004.csv		\
-unpadded_enrollment_2005.csv : oneyr_all_schools_1999through2014.csv
+.INTERMEDIATE : oneyr_all_schools_1999through2014.csv
+$(unpadded_enrollment) : oneyr_all_schools_1999through2014.csv
 
 unpadded_enrollment_1999.csv : 
 	csvcut -c 2,85 $< > $@
@@ -45,8 +41,14 @@ enrollment_%.csv : enrollment_20th_day_%.csv
 enrollment_%.csv : enrollment_20th_day_%_GV_20151023.csv
 	in2csv $< | csvcut -c "School ID",7-19 $< > $@
 
+.INTERMEDIATE : enrollment_20th_day_2014-15.csv
 enrollment_2015.csv : enrollment_20th_day_2014-15.csv
 	in2csv $< | csvcut -c "School ID",7-19 $< > $@
+
+.INTERMEDIATE : membership_20th_day_2006.csv	\
+	        membership_20th_day_2007.csv	\
+	        membership_20th_day_2008.csv	\
+	        membership_20th_day_2009.csv
 
 enrollment_2006.csv enrollment_2007.csv : enrollment_%.csv: membership_20th_day_%.csv
 	csvcut -c "School ID",11-23 $< > $@
