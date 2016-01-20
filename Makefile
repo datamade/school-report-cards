@@ -1,7 +1,9 @@
-include config.mk csv.mk normalize_isbe.mk
+include config.mk csv.mk normalize_isbe.mk cps_data/cps_enrollment.mk
+
+VPATH = .:./cps_data
 
 years = 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008	\
-        2009 2010 2011 2012 2013 2014 2015
+        2009 2010 2011 2012 2013 2014 2015 2016
 
 rcs = $(patsubst %,rc_%.csv,$(years))
 
