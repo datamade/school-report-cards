@@ -4,3 +4,5 @@ rc_*.csv
 *~
 #*
 *#
+cps_data/*.xls
+cps_data/*.xlsx

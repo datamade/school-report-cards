@@ -119,10 +119,10 @@ characteristics : raw_characteristics rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
                              AS SELECT DISTINCT \
                                        school_id, \
-                                       parental_involvement_percent/100 AS parental_involvment_percent, \
+                                       parental_involvement_percent/100 AS parental_involvement_percent, \
                                        mobility_rate/100 AS mobility_rate, \
                                        dropout_rate/100 AS dropout_rate, \
-                                       replace(chronic_truants, ',','')::numeric, \
+                                       replace(chronic_truants, ',','')::numeric chronic_truants, \
 	                               chronic_truants_rate/100 as chronic_truants_rate, \
                                        year \
                              FROM $< INNER JOIN $(word 2,$^) \
@@ -175,7 +175,7 @@ minutes_per_subject : raw_instructional rcdts_crosswalk
                             (SELECT school_id, \
                              UNNEST(ARRAY['third', \
                                           'sixth', \
-                                          'eighth']), \
+                                          'eighth']) as grade, \
                              UNNEST(ARRAY[minutes_per_day_math_g3, \
                                           minutes_per_day_math_g6, \
                                           minutes_per_day_math_g8]) AS math, \
