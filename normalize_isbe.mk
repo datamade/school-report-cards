@@ -77,19 +77,33 @@ raw_act_cols = "ACT COMP SCHOOL","ACT ENGL SCHOOL SCORE","ACT MATH SCHOOL SCORE"
 
 act : raw_act rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
-                            AS SELECT school_id, composite, english, \
+                            AS SELECT DISTINCT \
+                                      school_id, composite, english, \
                                       math, reading, science, year \
                             FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts) \
                             WHERE composite IS NOT NULL"
 
+raw_district_act_defs  = composite FLOAT, english FLOAT, math FLOAT, \
+                         reading FLOAT, science FLOAT
+raw_district_act_cols = "ACT COMP DISTRICT","ACT ENGL DISTRICT SCORE","ACT MATH DISTRICT SCORE","ACT READ DISTRICT SCORE","ACT SCIE DISTRICT SCORE"
+
+district_act : raw_district_act
+	$(create_relation) "CREATE TABLE $@ \
+                            AS SELECT DISTINCT \
+                                      SUBSTRING(rcdts FROM 3 FOR 7) AS district_id, \
+                                      composite, english, math, \
+                                      reading, science, year \
+                            FROM $< WHERE composite IS NOT NULL"
+
 raw_demography_defs = white_percent FLOAT, black_percent FLOAT, \
                       hispanic_percent FLOAT, asian_percent FLOAT, \
                       native_american_percent FLOAT, total TEXT, \
                       limited_english_proficiency_percent FLOAT, \
-                      low_income_percent FLOAT 
+                      low_income_percent FLOAT, \
+                      individualized_education_plan FLOAT \
 
-raw_demography_cols = "SCHOOL - WHITE %","SCHOOL - BLACK %","SCHOOL - HISPANIC %","SCHOOL - ASIAN %","SCHOOL - NATIVE AMERICAN %","SCHOOL TOTAL ENROLLMENT","L.E.P. SCHOOL %","LOW - INCOME SCHOOL %"
+raw_demography_cols = "SCHOOL - WHITE %","SCHOOL - BLACK %","SCHOOL - HISPANIC %","SCHOOL - ASIAN %","SCHOOL - NATIVE AMERICAN %","SCHOOL TOTAL ENROLLMENT","L.E.P. SCHOOL %","LOW - INCOME SCHOOL %","I.E.P. SCHOOL %"
 
 demography : raw_demography rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
@@ -103,6 +117,7 @@ demography : raw_demography rcdts_crosswalk
                                       replace(total, ',', '')::integer AS total, \
                                       limited_english_proficiency_percent/100 as limited_english_proficiency, \
                                       low_income_percent/100 as low_income_percent, \
+                                      individualized_education_plan/100 AS individualed_education_plan_rate \
                                       year \
                             FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts)"
@@ -112,8 +127,9 @@ raw_characteristics_defs = parental_involvement_percent FLOAT, \
                            mobility_rate FLOAT, \
                            dropout_rate FLOAT, \
                            chronic_truants TEXT, \
-                           chronic_truants_rate FLOAT
-raw_characteristics_cols =  "PARENTAL INVOLVEMENT SCHOOL %","MOBILITY RATE SCHOOL %","DROPOUT RATE SCHOOL %","CHRONIC TRUANTS $(HASH) - SCHOOL","CHRONIC TRUANTS RATE SCHOOL %"
+                           chronic_truants_rate FLOAT, \
+                           graduation_rate FLOAT
+raw_characteristics_cols =  "PARENTAL INVOLVEMENT SCHOOL %","MOBILITY RATE SCHOOL %","DROPOUT RATE SCHOOL %","CHRONIC TRUANTS $(HASH) - SCHOOL","CHRONIC TRUANTS RATE SCHOOL %","HS 4 - YEAR GRAD RATE SCHOOL %; ALL"
 
 characteristics : raw_characteristics rcdts_crosswalk
 	$(create_relation) "CREATE TABLE $@ \
@@ -124,9 +140,31 @@ characteristics : raw_characteristics rcdts_crosswalk
                                        dropout_rate/100 AS dropout_rate, \
                                        replace(chronic_truants, ',','')::numeric chronic_truants, \
 	                               chronic_truants_rate/100 as chronic_truants_rate, \
+                                       graduation_rate/100 as graduation_rate, \
                                        year \
                              FROM $< INNER JOIN $(word 2,$^) \
                              USING (rcdts)"
+
+raw_district_characteristics_defs = parental_involvement_percent FLOAT, \
+                                    mobility_rate FLOAT, \
+                                    dropout_rate FLOAT, \
+                                    chronic_truants TEXT, \
+                                    chronic_truants_rate FLOAT, \
+                                    graduation_rate FLOAT
+raw_district_characteristics_cols =  "PARENTAL INVOLVEMENT DISTRICT %","MOBILITY RATE DISTRICT %","DROPOUT RATE DISTRICT %","CHRONIC TRUANTS $(HASH) - DISTRICT","CHRONIC TRUANTS RATE DISTRICT %","HS 4 - YEAR GRAD RATE DISTRICT %; ALL"
+
+district_characteristics : raw_district_characteristics
+	$(create_relation) "CREATE TABLE $@ \
+                             AS SELECT DISTINCT ON (district_id, year)\
+                                       SUBSTRING(rcdts FROM 3 FOR 7) AS district_id, \
+                                       parental_involvement_percent/100 AS parental_involvement_percent, \
+                                       mobility_rate/100 AS mobility_rate, \
+                                       dropout_rate/100 AS dropout_rate, \
+                                       replace(chronic_truants, ',','')::numeric chronic_truants, \
+	                               chronic_truants_rate/100 as chronic_truants_rate, \
+                                       graduation_rate/100 as graduation_rate, \
+                                       year \
+                             FROM $< ORDER BY district_id, year, dropout_rate NULLS LAST, graduation_rate NULLS LAST"
 
 raw_instructional_defs = average_class_size_kg FLOAT, \
                          average_class_size_g1 FLOAT, \
