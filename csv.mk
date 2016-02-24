@@ -26,19 +26,13 @@ rc02All.zip :
                RC12_layout.xls RC97_layout.xls rc97.zip
 
 RC97_layout.xls : rc97.zip
-	$(unzip-rename)
-
 RC98_layout.xls : rc98u.zip
-	$(unzip-rename)
-
 RC99_layout.xls : rc99lay.zip
-	$(unzip-rename)
-
 RC00_layout.xls : Rc00lay.zip
-	$(unzip-rename)
-
 RC01_layout.xls : RC01_layout.zip
-	$(unzip-rename)
+
+RC97_layout.xls RC98_layout.xls RC99_layout.xls RC00_layout.xls :
+	$(unzip_rename)	
 
 RC02_layout.xls :
 	wget -O $@ http://www.isbe.net/research/Report_Card_02/ReportCard02_layout.xls
@@ -77,22 +71,18 @@ schema_19%.csv schema_20%.csv: RC%_layout.csv
 rc19%u.txt rc20%u.txt : rc%u.zip
 	$(unzip-rename)
 
-rc1998u.txt : rc98bu.zip
-	$(unzip-rename)
-
-rc2000u.txt : Rc00u.zip
-	$(unzip-rename)
-
-rc2002u.txt : rc02All.zip
-	$(unzip-rename)
-
-rc2004u.txt : rc04u_updated092005.zip
-	$(unzip-rename)
-
 rc2006u.txt rc2007u.txt rc2009u.txt : rc20%u.txt : rc%.zip
 	$(unzip-rename)
 
 rc201%u.txt : rc1%.zip
+	$(unzip-rename)
+
+rc1998u.txt : rc98bu.zip
+rc2000u.txt : Rc00u.zip
+rc2002u.txt : rc02All.zip
+rc2004u.txt : rc04u_updated092005.zip
+
+rc1998u.txt rc2000u.txt rc2002u.txt rc2004u.txt :
 	$(unzip-rename)
 
 rc2015u.txt :
