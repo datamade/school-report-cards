@@ -29,7 +29,7 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source terryfy/travis_tools.sh; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then get_python_environment $TERRYFY_PYTHON
   venv; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install caskroom/cask/brew-cask && brew tap homebrew/versions && brew cask install --appdir=/Applications libreoffice43 && brew install unoconv; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew cask install --appdir=/Applications libreoffice43 && brew install unoconv; fi
 install:
 - pip install csvkit
 - createdb schools
