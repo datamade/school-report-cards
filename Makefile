@@ -9,7 +9,7 @@ rcs = $(patsubst %,rc_%.csv,$(years))
 
 csv : $(rcs)
 
-database : act school district demography characteristics average_class_size \
+database : csv act school district demography characteristics average_class_size \
            minutes_per_subject grades cps_crosswalk
 
 

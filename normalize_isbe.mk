@@ -117,7 +117,7 @@ demography : raw_demography rcdts_crosswalk
                                       replace(total, ',', '')::integer AS total, \
                                       limited_english_proficiency_percent/100 as limited_english_proficiency, \
                                       low_income_percent/100 as low_income_percent, \
-                                      individualized_education_plan/100 AS individualed_education_plan_rate \
+                                      individualized_education_plan/100 AS individualed_education_plan_rate, \
                                       year \
                             FROM $< INNER JOIN $(word 2,$^) \
                             USING (rcdts)"
