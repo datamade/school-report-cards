@@ -32,7 +32,7 @@ RC00_layout.xls : Rc00lay.zip
 RC01_layout.xls : RC01_layout.zip
 
 RC97_layout.xls RC98_layout.xls RC99_layout.xls RC00_layout.xls :
-	$(unzip_rename)	
+	$(unzip-rename)	
 
 RC02_layout.xls :
 	wget -O $@ http://www.isbe.net/research/Report_Card_02/ReportCard02_layout.xls

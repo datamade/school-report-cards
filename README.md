@@ -16,7 +16,7 @@ Tools for parsing annual school report card data from the state of Illinois
 
 You will need to run `createdb schools` to initialize the postgres database.
 
-Running this command will import the data into
+Running `make database` will import the data into
 normalized tables in a postgresql database.
 
 Right now, the database scripts only fully process the school-level
