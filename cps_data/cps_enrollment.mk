@@ -2,9 +2,6 @@
 cps_school_data :
 	wget -P cps_data/ -e robots=off -r -l 1 -nd -N -A xls,xlsx -H http://cps.edu/SchoolData/Pages/SchoolData.aspx
 
-%.csv : %.xls
-	in2csv $< > $@
-
 enrollment = $(patsubst %,enrollment_%.csv,$(years))
 unpadded_enrollment = $(patsubst %,unpadded_%,$(enrollment))
 
