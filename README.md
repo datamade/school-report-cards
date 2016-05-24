@@ -3,6 +3,15 @@ School Report Cards
 
 Tools for parsing annual school report card data from the state of Illinois
 
+## Requirements
+* [GNU Make](https://www.gnu.org/software/make/)
+* [GNU Wget](https://www.gnu.org/software/wget/)
+* [Python 3](https://www.python.org/downloads/)
+* [unoconv](http://dag.wiee.rs/home-made/unoconv/)
+* [csvkit](https://csvkit.readthedocs.org/en/0.9.1/install.html)
+* [PostgreSQL](http://www.postgresql.org/)
+* [unzip](http://www.info-zip.org/)
+
 ## `make csv`
 
 Running this command will:
@@ -12,7 +21,7 @@ Running this command will:
 
 ## `make database`
 
-Before running this, you will need postgres installed on your system. Then you will need to run `createdb schools` to initialize the database.
+You will need to run `createdb schools` to initialize the database.
 
 Running this command will import the data into
 normalized tables in a postgresql database.
@@ -25,14 +34,3 @@ data that appears in all 22 years of data. These include
 * Time spent on subject
 * Class sizes, by grade
 * School level characteristics like parent involvement, truancy, and graduation rate.
-
-
-## Requirements
-* [GNU Make](https://www.gnu.org/software/make/)
-* [GNU Wget](https://www.gnu.org/software/wget/)
-* [Python](https://www.python.org/downloads/)
-* [unoconv](http://dag.wiee.rs/home-made/unoconv/)
-* [csvkit](https://csvkit.readthedocs.org/en/0.9.1/install.html)
-* [PostgreSQL](http://www.postgresql.org/)
-* [unzip](http://www.info-zip.org/)
-
