@@ -3,13 +3,19 @@ School Report Cards
 
 Tools for parsing annual school report card data from the state of Illinois
 
-If you run `make csv` the program will
+## `make csv`
+
+Running this command will:
 
 1. Download ISBE report card data from 1997-2015
 2. Convert the fixed width files to csv format, with year-over-year normalized column names
 
-If you run `make database` the program will import the data into
-normalized tables in a postgresql database
+## `make database`
+
+Before running this, you will need postgres installed on your system. Then you will need to run `createdb schools` to initialize the database.
+
+Running this command will import the data into
+normalized tables in a postgresql database.
 
 Right now, the database scripts only fully process the school-level
 data that appears in all 22 years of data. These include
