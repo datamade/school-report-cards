@@ -31,4 +31,4 @@ before_install:
 - if [[ "TRAVIS_OS_NAME" == "osx" ]]; then brew tap caskroom/versions && brew cask install libreoffice43 && brew install unoconv; fi
 install:
 - pip install csvkit
-- make database
+- make database 
