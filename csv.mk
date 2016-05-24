@@ -74,7 +74,7 @@ rc19%u.txt rc20%u.txt : rc%u.zip
 rc2006u.txt rc2007u.txt rc2009u.txt : rc20%u.txt : rc%.zip
 	$(unzip-rename)
 
-rc201%u.txt : rc1%.zip
+rc2010u.txt rc2011u.txt rc2012u.txt rc2013u.txt rc2014u.txt : rc201%u.txt : rc1%.zip
 	$(unzip-rename)
 
 rc1998u.txt : rc98bu.zip
