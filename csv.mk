@@ -65,7 +65,7 @@ RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx
 	soffice --headless --convert-to csv $<
 
 schema_19%.csv schema_20%.csv: RC%_layout.csv
-	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
+	iconv -f WINDOWS-1252 -t UTF8 $< | python schema.py $($*_col) | python normalize_schema.py > $@
 
 .INTERMEDIATE : rc1998u.txt rc98u.zip rc2000u.txt Rc00u.zip		\
                 rc2002u.txt rc2004u.txt rc04u_updated092005.zip		\
