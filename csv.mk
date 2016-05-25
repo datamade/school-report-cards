@@ -43,6 +43,10 @@ RC03_layout.xls RC10_layout.xls :
 RC%_layout.xls RC%_layout.xlsx :
 	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/$@
 
+RC15_layout.xlsx :
+	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/RC15_layout_complete.xlsx
+
+
 RC06_layout.xls :
 	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/$@"
 
@@ -57,11 +61,8 @@ RC12_layout.xls :
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
-RC13_layout.csv RC14_layout.csv RC15_layout_complete.csv : %.csv : %.xlsx 
+RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx 
 	unoconv --format csv $<
-
-RC15_layout.csv : RC15_layout_complete.csv
-	mv $< $@
 
 schema_19%.csv schema_20%.csv: RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
