@@ -57,12 +57,12 @@ RC15_layout.xlsx :
 
 
 %.csv : %.xls
-	libreoffice --headless --convert-to csv $<
+	soffice --headless --convert-to csv $<
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
 RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx 
-	libreoffice --headless --convert-to csv $<
+	soffice --headless --convert-to csv $<
 
 schema_19%.csv schema_20%.csv: RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
