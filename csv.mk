@@ -43,10 +43,6 @@ RC03_layout.xls RC10_layout.xls :
 RC%_layout.xls RC%_layout.xlsx :
 	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/$@
 
-RC15_layout.xlsx :
-	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/RC15_layout_complete.xlsx
-
-
 RC06_layout.xls :
 	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/$@"
 
@@ -55,6 +51,10 @@ RC11_layout.xls :
 
 RC12_layout.xls :
 	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
+
+RC15_layout.xlsx :
+	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/RC15_layout_complete.xlsx
+
 
 %.csv : %.xls 
 	unoconv --format csv $<
