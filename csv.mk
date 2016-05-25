@@ -56,13 +56,13 @@ RC15_layout.xlsx :
 	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/RC15_layout_complete.xlsx
 
 
-%.csv : %.xls 
-	unoconv --format csv $<
+%.csv : %.xls
+	libreoffice --headless --convert-to csv $<
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
 RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx 
-	unoconv --format csv $<
+	libreoffice --headless --convert-to csv $<
 
 schema_19%.csv schema_20%.csv: RC%_layout.csv
 	cat $< | python schema.py $($*_col) | python normalize_schema.py > $@
