@@ -37,5 +37,3 @@ install:
 - createdb schools
 script:
 - make database
-
-ln -s /Applications/OpenOffice.org\ 2.0.app/Contents/openoffice.org/
