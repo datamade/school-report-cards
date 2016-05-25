@@ -19,8 +19,6 @@ matrix:
   include:
   - os: linux
     python: 3.4
-  - os: linux
-    python: 2.7
   - os: osx
     language: generic
     env: TERRYFY_PYTHON='system 2'
@@ -36,4 +34,5 @@ before_install:
 install:
 - pip install csvkit
 - createdb schools
+script:
 - make database
