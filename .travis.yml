@@ -29,7 +29,7 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then get_python_environment $TERRYFY_PYTHON
   venv; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg && sudo hdiutil attach LibreOffice_4.3.7.2_MacOS_x86-64.dmg && ln -s /Volumes/LibreOffice/LibreOffice.app/Contents/MacOS/python /tmp/python; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew cask install unoconv; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install unoconv --HEAD; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pg_ctl -D /usr/local/var/postgres start; fi
 install:
 - pip install csvkit
