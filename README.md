@@ -1,5 +1,6 @@
 School Report Cards
 ===================
+[![Linux build](https://img.shields.io/travis/datamade/school-report-cards.svg?style=flat-square&label=Linux build)](https://travis-ci.org/datamade/school-report-cards)[![Mac OS X build](https://img.shields.io/travis/datamade/school-report-cards.svg?style=flat-square&label=Mac OS X build)](https://travis-ci.org/datamade/school-report-cards)
 
 Tools for parsing annual school report card data from the state of Illinois
 
@@ -7,10 +8,26 @@ Tools for parsing annual school report card data from the state of Illinois
 * [GNU Make](https://www.gnu.org/software/make/)
 * [GNU Wget](https://www.gnu.org/software/wget/)
 * [Python 3](https://www.python.org/downloads/)
-* [unoconv](http://dag.wiee.rs/home-made/unoconv/)
-* [csvkit](https://csvkit.readthedocs.org/en/0.9.1/install.html)
+* [csvkit](https://csvkit.readthedocs.org/en/latest/install.html)
+* [xlsx2csv](https://github.com/dilshod/xlsx2csv)
 * [PostgreSQL](http://www.postgresql.org/)
 * [unzip](http://www.info-zip.org/)
+
+### Ubuntu
+Most of these dependencies are installed by default
+```
+sudo apt-get install postgresql
+pip install csvkit
+pip install xlsx2csv
+```
+
+### Mac OS X
+Most of these dependencies are installed by default
+```
+brew install postgresql
+pip install csvkit
+pip install xlsx2csv
+```
 
 ## `make database`
 
