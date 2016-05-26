@@ -57,7 +57,7 @@ RC15_layout.xlsx :
 
 
 %.csv : %.xls
-	xls2csv $< > $@
+	unoconv -f csv $<
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
