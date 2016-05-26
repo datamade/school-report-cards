@@ -33,7 +33,7 @@ for row in reader :
     else :
         col_name = row[name_pos].strip()
     col_start = int(row[start_pos].split('-')[0].strip())
-    col_length = int(row[length_pos]) - 1
+    col_length = int(float(row[length_pos])) - 1
     writer.writerow((col_name, col_start, col_length))
 
 
