@@ -57,7 +57,7 @@ RC15_layout.xlsx :
 
 
 %.csv : %.xls
-	in2csv $< > $@
+	xls2csv $< > $@
 
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
