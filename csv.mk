@@ -62,7 +62,7 @@ RC15_layout.xlsx :
 .INTERMEDIATE: RC13_layout.csv RC14_layout.csv RC15_layout.csv		\
                RC13_layout.xlsx RC14_layout.xlsx RC15_layout.xlsx
 RC13_layout.csv RC14_layout.csv RC15_layout.csv : %.csv : %.xlsx
-	xlsx2csv.py $< > $@
+	xlsx2csv $< > $@
 
 schema_19%.csv schema_20%.csv: RC%_layout.csv
 	iconv -f WINDOWS-1252 -t UTF8 $< | python schema.py $($*_col) | python normalize_schema.py > $@
