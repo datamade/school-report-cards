@@ -8,7 +8,7 @@ Tools for parsing annual school report card data from the state of Illinois
 * [GNU Make](https://www.gnu.org/software/make/)
 * [GNU Wget](https://www.gnu.org/software/wget/)
 * [Python 3](https://www.python.org/downloads/)
-* [csvkit](https://csvkit.readthedocs.org/en/latest/install.html)
+* [csvkit](https://csvkit.readthedocs.io/en/latest/tutorial/1_getting_started.html#installing-csvkit)
 * [xlsx2csv](https://github.com/dilshod/xlsx2csv)
 * [PostgreSQL](http://www.postgresql.org/)
 * [unzip](http://www.info-zip.org/)
