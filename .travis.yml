@@ -26,8 +26,7 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pg_ctl -D /usr/local/var/postgres start; fi
 install:
 - pip install --upgrade pip
-- pip install csvkit
-- pip install xlsx2csv
+- pip install -r requirements.txt
 - createdb schools
 script:
 - make database
