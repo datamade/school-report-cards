@@ -1,15 +1,36 @@
+# ================================================
+#
+# CLEAN AND IMPORT DATA INTO A POSTGRES DATABASE
+#
+# ================================================
+#
+# Once the CSVs have been downloaded and converted, this makefile
+# uses them to create a Postgres database on the user's machine.
+# ------------------------------------------------
+
+# Macro for properly parsing hash characters in strings.
 HASH = \#
 
+# Canned sequence for simplifying the creation of Postgres tables.
+# Translation: "Check to see if a table with the name of the target
+# exists, logging output and errors in /dev/null. 
+# If that fails, follow the custom command specified after the
+# function call to make the table."
 define create_relation
  psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
  psql -d $(PG_DB) -c 
 endef
 
+# Identical to `create_relation`, except the custom command that
+# gets called to create the table (if no table exists) will 
+# get called in its own shell.
 define create_relation_and
  psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
  (psql -d $(PG_DB) -c 
 endef
 
+# General rule for importing a raw table (lots of extraneous data and not
+# normalized) into the postgres DB. 
 raw_% : $(rcs)
 	psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || \
 	(psql -d $(PG_DB) -c 'CREATE TABLE $@ (rcdts TEXT, $($@_defs), year INT)' && \
@@ -19,6 +40,8 @@ raw_% : $(rcs)
                psql -d $(PG_DB) -c 'COPY $@ FROM STDIN WITH CSV HEADER' ; \
 	 done)
 
+# Create a report card crosswalk, with a unique entry for each school,
+# by eliminating duplicates from `raw_school`.
 rcdts_crosswalk : raw_school
 	$(create_relation) "CREATE TABLE rcdts_crosswalk \
                             AS \
@@ -28,9 +51,25 @@ rcdts_crosswalk : raw_school
                             rcdts \
                             FROM raw_school"
 
+# Final columns for `raw_school`.
 raw_school_defs = type TEXT, name TEXT, district TEXT, city TEXT
+# Initial columns for `raw_school` (less legible).
 raw_school_cols = 2,3,4,5
 
+# ================================================
+# 
+# CREATE THE TABLES
+# 
+# ================================================
+#
+# The rest of the targets on this page are the final tables that show
+# up in the Postgres database. Each one is generated out of raw data and
+# the crosswalk, using SQL queries in order to clean and format the table.
+#
+# As with `raw_schools`, each table has a set of variables mapping the initial
+# column name (`raw_%_cols`) to a new column name (`raw_%_defs`).
+# ------------------------------------------------
+    
 school : rcdts_crosswalk raw_school
 	$(create_relation) "CREATE TABLE school \
                             AS SELECT DISTINCT \
