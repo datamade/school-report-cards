@@ -21,7 +21,7 @@ matrix:
       - brew install python3
       - virtualenv env -p python3
       - source env/bin/activate
-    addons:
+    services:
       - postgresql
 install:
 - pip install --upgrade pip
