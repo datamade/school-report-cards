@@ -21,8 +21,10 @@ matrix:
       - brew install python3
       - virtualenv env -p python3
       - source env/bin/activate
-    services:
-      - postgresql
+      - rm -rf /usr/local/var/postgres
+      - initdb /usr/local/var/postgres
+      - pg_ctl -D /usr/local/var/postgres start
+      - createuser -s postgres
 install:
 - pip install --upgrade pip
 - pip install -r requirements.txt
