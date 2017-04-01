@@ -8,15 +8,15 @@ unzip -p $< > $@
 endef
 
 %.zip :
-	wget http://www.isbe.net/research/zip/$@
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
-.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip
-rc11.zip rc12.zip rc13.zip rc14.zip :
-	wget http://www.isbe.net/assessment/zip/$@
+.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip rc15.zip
+rc11.zip rc12.zip rc13.zip rc14.zip rc15.zip:
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
 .INTERMEDIATE : rc02All.zip
 rc02All.zip :
-	wget http://www.isbe.net/research/Report_Card_02/$@
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
 .INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98bu.zip	\
                RC99_layout.xls rc99lay.zip RC00_layout.xls	\
@@ -35,25 +35,19 @@ RC97_layout.xls RC98_layout.xls RC99_layout.xls RC00_layout.xls RC01_layout.xls:
 	$(unzip-rename)	
 
 RC02_layout.xls :
-	wget -O $@ http://www.isbe.net/research/Report_Card_02/ReportCard02_layout.xls
-
-RC03_layout.xls RC10_layout.xls :
-	wget http://www.isbe.net/research/xls/$@
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/ReportCard02_layout.xls -O $@
 
 RC%_layout.xls RC%_layout.xlsx :
-	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/$@
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
-RC06_layout.xls :
-	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/$@"
+RC11_layout.xls RC13_layout.xls RC14_layout.xls:
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
-RC11_layout.xls :
-	wget http://www.isbe.net/assessment/xls/$@
+RC12_layout.xls:
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/RC12-Layout.xls -O $@
 
-RC12_layout.xls :
-	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
-
-RC15_layout.xlsx :
-	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/RC15_layout_complete.xlsx
+RC15_layout.xlsx:
+	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/RC15-layout.xlsx -O $@
 
 
 %.csv : %.xls
@@ -79,7 +73,7 @@ rc19%u.txt rc20%u.txt : rc%u.zip
 rc2006u.txt rc2007u.txt rc2009u.txt : rc20%u.txt : rc%.zip
 	$(unzip-rename)
 
-rc2010u.txt rc2011u.txt rc2012u.txt rc2013u.txt rc2014u.txt : rc201%u.txt : rc1%.zip
+rc2010u.txt rc2011u.txt rc2012u.txt rc2013u.txt rc2014u.txt rc2015u.txt: rc201%u.txt : rc1%.zip
 	$(unzip-rename)
 
 rc1998u.txt : rc98bu.zip
@@ -89,9 +83,6 @@ rc2004u.txt : rc04u_updated092005.zip
 
 rc1998u.txt rc2000u.txt rc2002u.txt rc2004u.txt :
 	$(unzip-rename)
-
-rc2015u.txt :
-	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/rc15.txt
 
 rc_%.csv : rc%u.txt schema_%.csv
 	in2csv -s $(word 2, $^) $< > $@
