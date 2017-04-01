@@ -10,14 +10,6 @@ endef
 %.zip :
 	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
-.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip rc15.zip
-rc11.zip rc12.zip rc13.zip rc14.zip rc15.zip:
-	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
-
-.INTERMEDIATE : rc02All.zip
-rc02All.zip :
-	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
-
 .INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98bu.zip	\
                RC99_layout.xls rc99lay.zip RC00_layout.xls	\
                Rc00lay.zip RC01_layout.xls RC01_layout.zip	\
@@ -38,9 +30,6 @@ RC02_layout.xls :
 	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/ReportCard02_layout.xls -O $@
 
 RC%_layout.xls RC%_layout.xlsx :
-	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
-
-RC11_layout.xls RC13_layout.xls RC14_layout.xls:
 	wget https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/$@ -O $@
 
 RC12_layout.xls:

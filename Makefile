@@ -31,7 +31,7 @@ cps_crosswalk : raw_cps_crosswalk rcdts_crosswalk
 # download nces crosswalk to match shapefiles to district ids
 .INTERMEDIATE: nces_crosswalk.xls
 nces_crosswalk.xls :
-	wget http://www.isbe.net/sos/excel/nces_id_list.xls -O $@
+	wget https://www.isbe.net/Documents/nces_id_list.xls -O $@
 
 .INTERMEDIATE: nces_crosswalk.csv
 nces_crosswalk.csv : nces_crosswalk.xls 
