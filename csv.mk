@@ -7,16 +7,10 @@ define unzip-rename
 unzip -p $< > $@
 endef
 
+DOWNLOAD_URL=https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/
+
 %.zip :
-	wget http://www.isbe.net/research/zip/$@
-
-.INTERMEDIATE : rc11.zip rc12.zip rc13.zip rc14.zip
-rc11.zip rc12.zip rc13.zip rc14.zip :
-	wget http://www.isbe.net/assessment/zip/$@
-
-.INTERMEDIATE : rc02All.zip
-rc02All.zip :
-	wget http://www.isbe.net/research/Report_Card_02/$@
+	wget -O $@ $(DOWNLOAD_URL)$@
 
 .INTERMEDIATE: RC06_layout.xls RC98_layout.xls rc98bu.zip	\
                RC99_layout.xls rc99lay.zip RC00_layout.xls	\
@@ -32,29 +26,19 @@ RC00_layout.xls : Rc00lay.zip
 RC01_layout.xls : RC01_layout.zip
 
 RC97_layout.xls RC98_layout.xls RC99_layout.xls RC00_layout.xls RC01_layout.xls:
-	$(unzip-rename)	
-
-RC02_layout.xls :
-	wget -O $@ http://www.isbe.net/research/Report_Card_02/ReportCard02_layout.xls
-
-RC03_layout.xls RC10_layout.xls :
-	wget http://www.isbe.net/research/xls/$@
+	$(unzip-rename)
 
 RC%_layout.xls RC%_layout.xlsx :
-	wget ftp://ftp.isbe.net/SchoolReportCard/20$*%20School%20Report%20Card/$@
+	wget -O $@ $(DOWNLOAD_URL)$@
 
-RC06_layout.xls :
-	wget "ftp://ftp.isbe.net/SchoolReportCard/2006%20School%20Report%20Card(updated%20033007)/$@"
-
-RC11_layout.xls :
-	wget http://www.isbe.net/assessment/xls/$@
+RC02_layout.xls :
+	wget -O $@ $(DOWNLOAD_URL)ReportCard02_layout.xls
 
 RC12_layout.xls :
-	wget -O $@ http://www.isbe.net/assessment/xls/RC12-layout.xls
+	wget -O $@ $(DOWNLOAD_URL)RC12-layout.xls
 
 RC15_layout.xlsx :
-	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/RC15_layout_complete.xlsx
-
+	wget -O $@ $(DOWNLOAD_URL)RC15-layout.xlsx
 
 %.csv : %.xls
 	python xls2csv.py $< > $@
@@ -91,7 +75,7 @@ rc1998u.txt rc2000u.txt rc2002u.txt rc2004u.txt :
 	$(unzip-rename)
 
 rc2015u.txt :
-	wget -O $@ ftp://ftp.isbe.net/SchoolReportCard/2015%20School%20Report%20Card/rc15.txt
+	wget -O $@ $(DOWNLOAD_URL)rc15.txt
 
 rc_%.csv : rc%u.txt schema_%.csv
 	in2csv -s $(word 2, $^) $< > $@
