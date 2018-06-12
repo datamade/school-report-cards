@@ -5,6 +5,8 @@ years = 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008	\
 
 rcs = $(patsubst %,rc_%.csv,$(years))
 
+DOWNLOAD_URL=https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/
+
 csv : $(rcs)
 
 database : csv act school district demography characteristics average_class_size \
@@ -31,7 +33,7 @@ cps_crosswalk : raw_cps_crosswalk rcdts_crosswalk
 # download nces crosswalk to match shapefiles to district ids
 .INTERMEDIATE: nces_crosswalk.xls
 nces_crosswalk.xls :
-	wget http://www.isbe.net/sos/excel/nces_id_list.xls -O $@
+	wget $(DOWNLOAD_URL)$@ -O $@
 
 .INTERMEDIATE: nces_crosswalk.csv
 nces_crosswalk.csv : nces_crosswalk.xls 

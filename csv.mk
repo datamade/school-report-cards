@@ -7,8 +7,6 @@ define unzip-rename
 unzip -p $< > $@
 endef
 
-DOWNLOAD_URL=https://www.isbe.net/_layouts/Download.aspx?SourceUrl=/Documents/
-
 %.zip :
 	wget -O $@ $(DOWNLOAD_URL)$@
 
